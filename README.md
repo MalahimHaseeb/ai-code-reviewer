@@ -4,37 +4,41 @@ A self-hostable API that automatically reviews GitHub Pull Requests using AI (Go
 
 When a PR is opened, GitHub sends a webhook to this service, which queues the job, fetches the diff, runs an AI review, and posts the feedback as a PR comment.
 
-## Tech Stack
-
-- FastAPI — Webhook receiver and REST API
-- PostgreSQL — Stores repositories and review history
-- Redis — Job queue for asynchronous processing
-- Docker Compose — Orchestrates services with one command
-- Google Gemini — AI code review engine
-- Pytest — Comprehensive test suite covering core logic
+📖 Full writeup: https://blog.malahim.dev/project-showcases/ai-code-reviewer-i-built-a-self-hostable-github-pr-reviewer-with-fastapi-redis-and-docker
 
 ## How It Works
 
-PR Opened -> GitHub Webhook -> FastAPI -> Redis Queue -> Worker -> Gemini AI -> PR Comment
+PR Opened → GitHub Webhook → FastAPI → Redis Queue → Worker → Gemini → PR Comment → PostgreSQL
+GitHub has a ~3s webhook timeout. LLM calls take 5–15s. Redis decouples the two — API returns 200 instantly, worker handles the slow part separately.
 
----
+## Stack
 
-## Self-Host Setup
+- FastAPI — webhook receiver, REST API
+- PostgreSQL — repos, PR reviews, diff history
+- Redis — async job queue
+- Docker Compose — runs all 4 services with one command
+- Google Gemini — reviews the diff, returns structured feedback
+- Pytest — 8 tests covering core logic
+- GitHub Actions — CI on push, CD auto-deploys to EC2
 
-### 1. Clone the Repository
-```
+## Setup
+
+**1. Clone**
+
+```bash
 git clone https://github.com/MalahimHaseeb/ai-code-reviewer
-
 cd ai-code-reviewer
 ```
 
-### 2. Configure Environment
+**2. Configure**
+
+```bash
+cp .env.example .env
+```
+
+Fill in `.env`:
 
 ```
-cp .env.example .env
-
-Fill in your .env with the following variables:
-
 POSTGRES_USER=youruser
 POSTGRES_PASSWORD=yourpassword
 POSTGRES_DB=codereviewdb
@@ -45,35 +49,31 @@ GITHUB_WEBHOOK_SECRET=your_webhook_secret
 GITHUB_TOKEN=your_github_personal_access_token
 ```
 
-### 3. Deployment
+**3. Run**
 
-```
+```bash
 docker compose up --build
 ```
 
-### 4. Register Your Repository
-```
+**4. Register your repo**
+
+```bash
 curl -X POST http://localhost:8001/api/repos/register \
   -H "Content-Type: application/json" \
   -d '{"github_repo_name": "your/repo", "github_webhook_secret": "your_secret"}'
 ```
----
 
-## GitHub Webhook Configuration
+**5. Add GitHub webhook**
 
-Go to your GitHub Repository -> Settings -> Webhooks -> Add webhook:
+Go to your repo → Settings → Webhooks → Add webhook:
 
-- Payload URL: https://yourdomain.com/api/webhook
-- Content type: application/json
-- Secret: (Same value as GITHUB_WEBHOOK_SECRET)
-- Events: Select Pull requests only.
-
----
+- Payload URL: `https://yourdomain.com/api/webhook`
+- Content type: `application/json`
+- Secret: same value as `GITHUB_WEBHOOK_SECRET`
+- Events: Pull requests only
 
 ## Testing
 
-Run the test suite inside the Docker container:
-```
+```bash
 docker compose run --rm api pytest app/tests/ -v
 ```
----
