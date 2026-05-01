@@ -6,6 +6,7 @@ import os
 from app.services.gemini import review_code
 from app.services.github import post_pr_comment
 from app.database import AsyncSessionLocal
+from app.models.repo import Repo
 from app.models.review import PRReview
 from sqlalchemy import select
 
