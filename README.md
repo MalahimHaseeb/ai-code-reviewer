@@ -67,10 +67,14 @@ curl -X POST http://localhost:8001/api/repos/register \
 
 Go to your repo → Settings → Webhooks → Add webhook:
 
-- Payload URL: `https://yourdomain.com/api/webhook`
-- Content type: `application/json`
-- Secret: same value as `GITHUB_WEBHOOK_SECRET`
-- Events: Pull requests only
+- **Payload URL:** `https://yourdomain.com/api/webhook`
+- **Content type:** `application/json`
+- **Secret:** same value as `GITHUB_WEBHOOK_SECRET`
+- **Which events would you like to trigger this webhook?**
+  - Select **"Let me select individual events"**
+  - ✅ Check **Pull requests**
+  - ❌ Uncheck everything else (Pushes is checked by default — uncheck it)
+- Click **Add webhook**
 
 ## Testing
 
