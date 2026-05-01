@@ -52,3 +52,20 @@ jobs:
           POSTGRES_PASSWORD: testpassword
           POSTGRES_DB: codereviewdb
         run: pytest app/tests/ -v
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/ai-code-reviewer
+            git pull origin main
+            docker compose up --build -d
